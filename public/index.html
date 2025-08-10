@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AviationStack API - Consulta de Voos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="./css/styles.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full mb-6 shadow-lg">
+                <i data-lucide="plane" class="w-10 h-10 text-white"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">AviationStack API</h1>
+            <p class="text-xl text-gray-600">Consulta de Voos em Tempo Real</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="mb-8">
+            <div class="flex flex-wrap justify-center space-x-1 bg-white rounded-xl p-1 shadow-lg max-w-4xl mx-auto">
+                <button class="nav-tab active" data-tab="flights">
+                    <i data-lucide="plane-takeoff" class="w-4 h-4 mr-2"></i>
+                    Voos
+                </button>
+                <button class="nav-tab" data-tab="airlines">
+                    <i data-lucide="building" class="w-4 h-4 mr-2"></i>
+                    Companhias
+                </button>
+                <button class="nav-tab" data-tab="airports">
+                    <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
+                    Aeroportos
+                </button>
+                <button class="nav-tab" data-tab="routes">
+                    <i data-lucide="route" class="w-4 h-4 mr-2"></i>
+                    Rotas
+                </button>
+            </div>
+        </nav>
+
+        <!-- Content Sections -->
+        <main class="max-w-6xl mx-auto">
+            
+            <!-- Flights Tab -->
+            <section id="flights" class="tab-content active">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- All Flights Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i data-lucide="globe" class="w-6 h-6 text-green-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Todos os Voos</h3>
+                                    <span class="status-badge status-available">✅ Gratuito</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Limite de resultados</label>
+                                <input type="number" id="allFlightsLimit" value="20" min="1" max="100" class="form-input">
+                            </div>
+                            <button onclick="getAllFlights()" class="btn btn-primary w-full">
+                                <i data-lucide="search" class="w-4 h-4 mr-2"></i>
+                                Buscar Voos
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Flights by Airline Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i data-lucide="building" class="w-6 h-6 text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Por Companhia</h3>
+                                    <span class="status-badge status-available">✅ Gratuito</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label class="form-label">Código IATA da Companhia</label>
+                                <input type="text" id="airline" placeholder="Ex: AA, DL, UA, G3, JJ" class="form-input">
+                                <p class="form-help">Códigos válidos: AA (American), DL (Delta), UA (United), G3 (GOL), JJ (TAM)</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Limite de resultados</label>
+                                <input type="number" id="flightLimit" value="10" min="1" max="100" class="form-input">
+                            </div>
+                            <button onclick="searchFlightsByAirline()" class="btn btn-primary w-full">
+                                <i data-lucide="search" class="w-4 h-4 mr-2"></i>
+                                Buscar por Companhia
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Flights by Route Card -->
+                    <div class="card lg:col-span-2">
+                        <div class="card-header">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i data-lucide="route" class="w-6 h-6 text-purple-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">Por Rota</h3>
+                                    <span class="status-badge status-available">✅ Gratuito</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="form-group">
+                                    <label class="form-label">Origem (código IATA)</label>
+                                    <input type="text" id="departure" placeholder="Ex: GRU, JFK, LHR" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Destino (código IATA)</label>
+                                    <input type="text" id="arrival" placeholder="Ex: GIG, LAX, CDG" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Limite de resultados</label>
+                                    <input type="number" id="routeLimit" value="10" min="1" max="100" class="form-input">
+                                </div>
+                            </div>
+                            <button onclick="searchFlightsByRoute()" class="btn btn-primary w-full mt-4">
+                                <i data-lucide="search" class="w-4 h-4 mr-2"></i>
+                                Buscar por Rota
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Airlines Tab -->
+            <section id="airlines" class="tab-content">
+                <div class="card max-w-md mx-auto">
+                    <div class="card-header">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                <i data-lucide="building" class="w-6 h-6 text-green-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Companhias Aéreas</h3>
+                                <span class="status-badge status-available">✅ Gratuito</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">Limite de resultados</label>
+                            <input type="number" id="airlinesLimit" value="50" min="1" max="100" class="form-input">
+                        </div>
+                        <button onclick="searchAirlines()" class="btn btn-primary w-full">
+                            <i data-lucide="list" class="w-4 h-4 mr-2"></i>
+                            Listar Companhias
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Airports Tab -->
+            <section id="airports" class="tab-content">
+                <div class="card max-w-md mx-auto">
+                    <div class="card-header">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                <i data-lucide="map-pin" class="w-6 h-6 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Aeroportos</h3>
+                                <span class="status-badge status-available">✅ Gratuito</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">Limite de resultados</label>
+                            <input type="number" id="airportsLimit" value="50" min="1" max="100" class="form-input">
+                        </div>
+                        <button onclick="searchAirports()" class="btn btn-primary w-full">
+                            <i data-lucide="list" class="w-4 h-4 mr-2"></i>
+                            Listar Aeroportos
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Routes Tab -->
+            <section id="routes" class="tab-content">
+                <div class="card max-w-md mx-auto">
+                    <div class="card-header">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4">
+                                <i data-lucide="x-circle" class="w-6 h-6 text-red-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Rotas de Voos</h3>
+                                <span class="status-badge status-restricted">❌ Plano Pago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-yellow-700">
+                                        Esta funcionalidade requer um plano pago da AviationStack API.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <button disabled class="btn btn-disabled w-full">
+                            <i data-lucide="lock" class="w-4 h-4 mr-2"></i>
+                            Não Disponível
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Results Section -->
+        <div id="results" class="mt-8"></div>
+
+        <!-- API Information -->
+        <footer class="mt-16 bg-white rounded-xl shadow-lg p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-green-500 mr-2"></i>
+                        Endpoints Disponíveis (Gratuito)
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center text-green-600">
+                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                            GET /api/flights - Voos em tempo real
+                        </li>
+                        <li class="flex items-center text-green-600">
+                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                            GET /api/flights/airline/:code - Voos por companhia
+                        </li>
+                        <li class="flex items-center text-green-600">
+                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                            GET /api/flights/route/:dep/:arr - Voos por rota
+                        </li>
+                        <li class="flex items-center text-green-600">
+                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                            GET /api/airlines - Lista de companhias
+                        </li>
+                        <li class="flex items-center text-green-600">
+                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                            GET /api/airports - Lista de aeroportos
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i data-lucide="x-circle" class="w-5 h-5 text-red-500 mr-2"></i>
+                        Não Disponíveis (Plano Pago)
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center text-red-600">
+                            <i data-lucide="x" class="w-4 h-4 mr-2"></i>
+                            Busca por nome/código específico
+                        </li>
+                        <li class="flex items-center text-red-600">
+                            <i data-lucide="x" class="w-4 h-4 mr-2"></i>
+                            GET /api/routes - Rotas de voos
+                        </li>
+                        <li class="flex items-center text-red-600">
+                            <i data-lucide="x" class="w-4 h-4 mr-2"></i>
+                            Histórico de voos
+                        </li>
+                        <li class="flex items-center text-red-600">
+                            <i data-lucide="x" class="w-4 h-4 mr-2"></i>
+                            Autocomplete de aeroportos/companhias
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                <p class="text-sm text-blue-700 flex items-center">
+                    <i data-lucide="info" class="w-4 h-4 mr-2"></i>
+                    <strong>Dica:</strong> O plano gratuito permite 100 requisições por mês e é ideal para testes e projetos pessoais.
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="./js/autocomplete.js"></script>
+    <script src="./js/app.js"></script>
+</body>
+</html>
