@@ -7,8 +7,10 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install dependencies with cache optimization
+RUN npm ci --only=production && \
+    npm cache clean --force && \
+    rm -rf /tmp/* /var/cache/apk/*
 
 # Build stage
 FROM node:20-alpine AS build

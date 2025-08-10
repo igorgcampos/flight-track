@@ -16,6 +16,14 @@ services:
     restart: unless-stopped
     networks:
       - aviation-network
+    volumes:
+      # Volume persistente para logs da aplicação
+      - app-logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"        # Máximo 10MB por arquivo de log
+        max-file: "3"          # Manter apenas 3 arquivos (30MB total)
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 30s
@@ -35,6 +43,11 @@ services:
     restart: unless-stopped
     networks:
       - aviation-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"         # Máximo 5MB por arquivo de log
+        max-file: "2"          # Manter apenas 2 arquivos (10MB total)
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
@@ -62,6 +75,12 @@ services:
     command: npm run dev
     networks:
       - aviation-network
+
+volumes:
+  app-logs:
+    driver: local
+  nginx-logs:
+    driver: local
 
 networks:
   aviation-network:

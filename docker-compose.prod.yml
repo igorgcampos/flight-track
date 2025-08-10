@@ -1,0 +1,111 @@
+services:
+  # Aplicação principal
+  aviationstack-app:
+    container_name: aviationstack-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - aviation-network
+    depends_on:
+      - fluentd
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "aviationstack.app"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  aviationstack-nginx:
+    container_name: aviationstack-nginx
+    image: nginx:1.25-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - aviationstack-app
+      - fluentd
+    restart: unless-stopped
+    networks:
+      - aviation-network
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "aviationstack.nginx"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Elasticsearch - Armazenamento de logs
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - aviation-network
+
+  # Fluentd - Coleta de logs
+  fluentd:
+    build:
+      context: ./fluentd
+      dockerfile: Dockerfile
+    container_name: fluentd
+    volumes:
+      - ./fluentd/fluent.conf:/fluentd/etc/fluent.conf
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - fluentd-buffer:/var/log/fluentd-buffers
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    depends_on:
+      - elasticsearch
+    networks:
+      - aviation-network
+
+  # Kibana - Interface para visualizar logs
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - aviation-network
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  fluentd-buffer:
+    driver: local
+
+networks:
+  aviation-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
